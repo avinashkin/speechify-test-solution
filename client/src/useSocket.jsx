@@ -7,12 +7,23 @@ const subscriptions = ["final", "partial", "transcriber-ready", "error"];
 // feel free to pass in any props
 const useSocket = () => {
   // ... free to add any state or variables
-  const initialize = () => {};
+  const socket = io(serverURL);
+  const initialize = () => {
+    socket.on("connect", () => {
+      console.log('Connected socket connection', socket.id);
+    })
+  };
 
-  const disconnect = () => {};
+  const disconnect = () => {
+    
+    socket.emit('final');
+  };
 
   // ... free to add more functions
-  return { initialize, disconnect };
+  const sendData = (data) => {
+    socket.emit('transcriber-ready', data);
+  };
+  return { initialize, disconnect, sendData };
 };
 
 export default useSocket;

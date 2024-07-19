@@ -16,12 +16,26 @@ import Transcriber from "./transcriber.js";
  * - error: Emitted when an error occurs.
  */
 
+const transcriber = new Transcriber();
+
 const initializeWebSocket = (io) => {
   io.on("connection", (socket) => {
     console.log(`connection made (${socket.id})`);
-
+    // console.log(socket)
     // ... add needed event handlers and logic
+    socket.on('transcriber-ready', (args) => {
+
+      transcriber.startTranscriptionStream(args);
+    })
+
+    socket.on('final', () => {
+      transcriber.endTranscriptionStream();
+    })
   });
+
+  
+  
+  // transcriber.startTranscriptionStream()
 
   return io;
 };

@@ -57,6 +57,7 @@ const useAudioRecorder = ({ dataCb }) => {
       1,
       1
     );
+    console.log('11', scriptProcessor);
 
     scriptProcessor.current.onaudioprocess = (event) => {
       const inputBuffer = event.inputBuffer;
@@ -86,6 +87,7 @@ const useAudioRecorder = ({ dataCb }) => {
     setRecordingTime(0);
     setIsRecording(false);
     setIsPaused(false);
+    console.log('Rec stop');
   };
 
   const togglePauseResume = useCallback(() => {
