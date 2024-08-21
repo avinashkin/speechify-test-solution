@@ -5,10 +5,13 @@ import http from "http";
 import path from "path";
 import initializeWebSocket from "./websocket.js";
 import { Server } from "socket.io";
+import { createClient } from "@deepgram/sdk";
 
 // No need to edit any of this code
 
 const app = express();
+const deepgram = createClient("21c20a931eca3e4f21dfe0c61e10b30d9a8958d6");
+
 const server = http.Server(app);
 const io = new Server(server, {
   cors: {
@@ -17,7 +20,7 @@ const io = new Server(server, {
   },
 });
 
-initializeWebSocket(io);
+initializeWebSocket(io, deepgram);
 
 app.use(cors({ credentials: false, origin: "*" }));
 app.use(express.json());

@@ -82,12 +82,12 @@ const useAudioRecorder = ({ dataCb }) => {
   const stopRecording = () => {
     scriptProcessor.current?.disconnect();
     sourceNode.current?.disconnect();
+    console.log(mediaRecorder)
     mediaRecorder?.stop();
     _stopTimer();
     setRecordingTime(0);
     setIsRecording(false);
     setIsPaused(false);
-    console.log('Rec stop');
   };
 
   const togglePauseResume = useCallback(() => {

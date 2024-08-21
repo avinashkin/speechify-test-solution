@@ -1,99 +1,57 @@
 import EventEmitter from "events";
-import { createClient } from "@deepgram/sdk";
 import { LiveTranscriptionEvents } from "@deepgram/sdk";
-import { readFileSync } from "fs";
 
+let keepAlive;
 
 class Transcriber extends EventEmitter {
   constructor() {
     super();
   }
 
-  // sampleRate: number
-  async startTranscriptionStream(sampleRate) {
-    // example deepgram configuration
-    /*
-    {
-      model: "nova-2",
-      punctuate: true,
+  async startTranscriptionStream(deepgram) {
+    const live = deepgram.listen.live({
       language: "en",
-      interim_results: true,
-      diarize: false,
+      punctuate: true,
       smart_format: true,
-      endpointing: 0,
-      encoding: "linear16",
-      sample_rate: sampleRate,
-    }
-      */
-    const deepgram = createClient("e9c0ac0250d57a771e9277721edc996d8fe08fda");
-    // const live = deepgram.listen.live(
-    //   {
-    //     model: "nova-2",
-    //     punctuate: true,
-    //     language: "en",
-    //     interim_results: true,
-    //     diarize: false,
-    //     smart_format: true,
-    //     endpointing: 0,
-    //     encoding: "linear16",
-    //     sample_rate: sampleRate,
-    //   }
-    // );
-    
-    const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
-      // path to the audio file
-      readFileSync(sampleRate),
-      // STEP 3: Configure Deepgram options for audio analysis
-      {
-        model: "nova-2", 
-        punctuate: true,
-        language: "en",
-        interim_results: true,
-        diarize: false,
-        smart_format: true,
-        endpointing: 0,
-        encoding: "linear16",
-        sample_rate: sampleRate,
-      }
-    );
+      model: "nova-2",
+      interim_results: true,
+      endpointing: 10000,
+      smart_format: true,
+    });
 
-    console.log(result, error);
-
-    
-    // live.on(LiveTranscriptionEvents.Open, () => {
-    //   live.on(LiveTranscriptionEvents.Transcript, (data) => {
-    //     console.log(data);
-    //   });
-
-    //   live.on(LiveTranscriptionEvents.Close, () => {
-    //     console.log("Connection closed.");
-    //   });
+    if (keepAlive) clearInterval(keepAlive);
+    keepAlive = setInterval(() => {
+      console.log("deepgram: keepalive");
+      live.keepAlive();
+    }, 3000);
   
-    //   live.on(LiveTranscriptionEvents.Metadata, (data) => {
-    //     console.log(data);
-    //   });
+    live.addListener(LiveTranscriptionEvents.Open, (dd) => {
+      console.log('Deepgram connected');
+      live.addListener(LiveTranscriptionEvents.Transcript, (data) => {
+        console.log('Hereee',data);
+      });
+
+      live.addListener(LiveTranscriptionEvents.Close, async (ddd) => {
+        // clearInterval(keepAlive);
+        // live.finish();
+        console.log("Connection closed.", ddd);
+        clearInterval(keepAlive);
+      });
   
-    //   live.on(LiveTranscriptionEvents.Error, (err) => {
-    //     console.error('err', err);
-    //   });
-    // });
+      live.addListener(LiveTranscriptionEvents.Metadata, (data) => {
+        console.log("deepgram: packet received");
+        console.log("deepgram: metadata received");
+        console.log("ws: metadata sent to client");
+        console.log('Metadara', data);
+        // ws.send(JSON.stringify({ metadata: data }));
+      });
+  
+      live.addListener(LiveTranscriptionEvents.Error, (err) => {
+        console.error('err', err);
+      });
+    });
 
-    // live.on(LiveTranscriptionEvents.Error, (err) => {
-    //   console.error('err', err);
-    // });
-
-    
-
-    
-
-    // live.addListener(LiveTranscriptionEvents.Open, async () => {
-    //   console.log('Deep conn');
-    //   deepgram.addListener(LiveTranscriptionEvents.Transcript, (data) => {
-    //     const daa = JSON.parse(data);
-    //     console.log(daa);
-    //   })
-    // })
-
+    return live;
   }
 
   endTranscriptionStream() {

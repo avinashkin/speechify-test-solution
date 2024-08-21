@@ -11,6 +11,7 @@ import useSocket from "./useSocket";
 function App() {
   const { initialize, sendData, disconnect } = useSocket();
   const [textareaValue, setTextArea] = useState("");
+  const [isCoipied, setIsCopied] = useState(false);
 
   useEffect(() => {
     // Note: must connect to server on page load but don't start transcriber
@@ -29,26 +30,37 @@ function App() {
     console.log(op);
   };
 
-  const onStopRecordingPress = async () => {
-    const op = await stopRecording();
+  const onStopRecordingPress = () => {
+    const op = stopRecording();
     disconnect();
   };
 
   const onClickCopy = () => {
+    setIsCopied(true);
     textareaValue && navigator.clipboard.writeText(textareaValue);
+  }
+
+  const onTextChange = (value) => {
+    setIsCopied(false);
+    setTextArea(value)
   }
 
   // ... add more functions
   return (
     <div className="container">
-      <h1>Speechify Voice Notes</h1>
-      <p>Record or type something in the textbox.</p>
-      <textarea id="transcription-display" rows={10} value={textareaValue} onChange={(e) => setTextArea(e.target.value)} className="text-area"></textarea>
-      <div className="btn-container">
-        <button id="record-button"  className="btn" onClick={isRecording ? onStopRecordingPress : onStartRecordingPress}>{`${isRecording ? 'Stop Recording' : 'Start recording'}`}</button>
-        <button id="reset-button" className="btn" onClick={() => setTextArea("")}>Reset</button>
-        <button id="copy-button" className="btn" onClick={onClickCopy}>Copy</button>
-      </div>
+      <h1 className="heading">Speechify Voice Notes</h1>
+      <section className="main-section">
+        <p className="sub-text">Record or type something in the textbox.</p>
+        <div className="area-container">
+          <textarea id="transcription-display" rows={10} value={textareaValue} onChange={(e) => onTextChange(e.target.value)} className="text-area"></textarea>
+          <div className="btn-container">
+            <button id="record-button"  className="btn" onClick={isRecording ? onStopRecordingPress : onStartRecordingPress}>{`${isRecording ? 'Stop Recording' : 'Start recording'}`}</button>
+            <button id="reset-button" className="btn" onClick={() => onTextChange("")}>Reset</button>
+            <button id="copy-button" className="btn" onClick={onClickCopy}>{isCoipied? 'Copied!' : 'Copy'}</button>
+          </div>
+        </div>
+      </section>
+      
     </div>
   );
 }

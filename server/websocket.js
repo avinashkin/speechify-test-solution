@@ -18,25 +18,37 @@ import Transcriber from "./transcriber.js";
 
 const transcriber = new Transcriber();
 
-const initializeWebSocket = (io) => {
-  io.on("connection", (socket) => {
+const initializeWebSocket = (io, deepgramClient) => {
+  io.on("connection", async (socket) => {
     console.log(`connection made (${socket.id})`);
-    // console.log(socket)
+    let deepgram = await transcriber.startTranscriptionStream(deepgramClient);
     // ... add needed event handlers and logic
+    socket.emit('connected', socket.id);
+ 
     socket.on('transcriber-ready', (args) => {
+      // deepgram.send(args);
+      if (deepgram.getReadyState() === 1 /* OPEN */) {
+        console.log("socket: data sent to deepgram");
+        deepgram.send(args);
+      } else if (deepgram.getReadyState() >= 2 /* 2 = CLOSING, 3 = CLOSED */) {
+        console.log("socket: data couldn't be sent to deepgram");
+        console.log("socket: retrying connection to deepgram");
+        /* Attempt to reopen the Deepgram connection */
+        // deepgram.finish();
+        // deepgram.removeAllListeners();
+        deepgram = transcriber.startTranscriptionStream(deepgramClient);
+      } else {
+        console.log("socket: data couldn't be sent to deepgram");
+      }
 
-      transcriber.startTranscriptionStream(args);
     })
 
     socket.on('final', () => {
-      transcriber.endTranscriptionStream();
+      // transcriber.endTranscriptionStream();
+      deepgram.finish();
     })
   });
-
   
-  
-  // transcriber.startTranscriptionStream()
-
   return io;
 };
 
